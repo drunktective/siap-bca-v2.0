@@ -31,7 +31,7 @@ if __name__ == "__main__":
         executed = False
         time.sleep(1)
 
-        # cloud_version = getCloudVersion(os.getenv('CLOUD_HOST'), {'x-siap-token': 'rpi_mqtt_0d4d0dd01d8b8bffe77304d419f1ed594e5c9416d02c9757c8b03e02d37600e4:_'})
+        # cloud_version = getCloudVersion(os.getenv('CLOUD_HOST'), {'x-siap-token': 'xxx'})
         # print(f'[VERSION] cloud version: {cloud_version}')
 
         # local_version = getLocalVersion('.ver', 'r')
