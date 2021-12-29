@@ -32,12 +32,10 @@ def setAlarm(state):
 def readMotion(motion_pin):
     global motion, motion_final, motion_final_index, motion_, read_motion_loop_index
 
-    motion_filter_top = 0
-    motion_filter_bottom = 10
     read_motion_loop_count = 35
-    motion_final_count = 3
-
     if read_motion_loop_index == read_motion_loop_count:
+        motion_filter_top = 0
+        motion_filter_bottom = 10
         if motion >= (read_motion_loop_count / 2) - motion_filter_bottom and motion <= (read_motion_loop_count - motion_filter_top):
             motion_final += 1
 
@@ -46,11 +44,9 @@ def readMotion(motion_pin):
             motion_final_index -= 1
 
         else:
-            motion_ = False
+            motion_final_count = 3
 
-            if motion_final >= (motion_final_count - 1):
-                motion_ = True
-
+            motion_ = motion_final >= (motion_final_count - 1)
             motion_final_index = motion_final_count
             motion_final = 0
 
