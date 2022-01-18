@@ -1,0 +1,4 @@
+asyncio
+minimalmodbus
+paho-mqtt
+python-dotenv

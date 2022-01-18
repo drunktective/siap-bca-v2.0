@@ -4,20 +4,11 @@ def instrument(address, baud, port, closePort=False):
     device = minimalmodbus.Instrument(port, address)
     device.serial.baudrate = baud
     device.close_port_after_each_call = closePort
-
-    # dev.mode = minimalmodbus.MODE_RTU
-    # dev.serial.timeout = 1
-    # dev.debug = True
-
     return device
 
-def write_pool(device, state):
+def write_pool(device, address, state):
     try:
-        if state is False:
-            device.write_register(1, 0, 0)
-        else:
-            device.write_register(1, 1, 0)
-
+        device.write_register(address, int(state), 0)
         return True
 
     except:

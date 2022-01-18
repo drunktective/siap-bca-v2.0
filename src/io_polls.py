@@ -1,7 +1,7 @@
 from src import modbuser as mb
 
 device = mb.instrument(25, 9600, "/dev/ttyUSB0")
-# alarm = mb.instrument(25, 9600, "/dev/ttyUSB1")
+alarm = mb.instrument(26, 9600, "/dev/ttyUSB0")
 
 read_motion_loop_index = 0
 motion_final_index = 3
@@ -10,7 +10,6 @@ motion_ = False
 motion__ = False
 motion = 0
 
-remove = 0
 outage = 0
 cut_alarm = 0
 heat = 0
@@ -22,7 +21,7 @@ sensorData = False
 
 def close():
     mb.close_port(device)
-    # mb.close_port(alarm)
+    mb.close_port(alarm)
     return True
 
 def setAlarm(state):
@@ -63,13 +62,12 @@ def readMotion(motion_pin):
     return motion_
 
 def readSensor():
-    global motion__, read_sens_loop_index, remove, outage, cut_alarm, heat, cut_heat
+    global motion__, read_sens_loop_index, outage, cut_alarm, heat, cut_heat
     read_sens_loop_count = 7
 
     if read_sens_loop_index is read_sens_loop_count:
         sensorData = {
-            'motion': int(not motion__),
-            'remove': round(remove / read_sens_loop_count),
+            'motion': int(motion__),
             'outage': round(outage / read_sens_loop_count),
             'cut_alarm': round(cut_alarm / read_sens_loop_count),
             'heat': round(heat / read_sens_loop_count),
@@ -77,27 +75,23 @@ def readSensor():
         }
 
         motion__ = False
-        remove = 0
         outage = 0
         cut_alarm = 0
         heat = 0
         cut_heat = 0
 
         read_sens_loop_index = 0
-
         return sensorData
 
     else:
-        sensors = mb.read_pool(device, 6)
-        
+        sensors = mb.read_pool(device, 8)
         if sensors:
-            motion__ = readMotion(sensors[0])
-            remove += not sensors[1]
-            cut_alarm += sensors[2]
-            heat += not sensors[3]
-            cut_heat += not sensors[4]
-            outage += sensors[5]
+            motion__ = not readMotion(sensors[2])
+            cut_alarm += not mb.write_pool(alarm, 0, alarmState)
+            heat += not sensors[4]
+            cut_heat += not sensors[3]
+            outage += sensors[7]
             read_sens_loop_index += 1
 
-        print(sensors)
+        # print(f'{sensors[2]}, {int(motion__)}, {cut_alarm}, {heat}, {cut_heat}, {outage}')
         return False

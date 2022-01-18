@@ -27,17 +27,21 @@ def alarmForceOffTask():
 def compareData(sensorData):
     global temp, timeoutAlarmForceOff
 
-    motion, remove, outage, cut_alarm, heat, cut_heat = sensorData['motion'], sensorData['remove'], sensorData['outage'], sensorData['cut_alarm'], sensorData['heat'], sensorData['cut_heat']
+    motion, outage, cut_alarm, heat, cut_heat = sensorData['motion'], sensorData['outage'], sensorData['cut_alarm'], sensorData['heat'], sensorData['cut_heat']
+
+    print(f'{motion}, {outage}, {cut_alarm}, {heat}, {cut_heat}')
 
     isOperated = gateway.checkOperationTime()
 
-    if motion or remove or outage or cut_alarm or heat or cut_heat:
+    if not motion or outage or cut_alarm or heat or cut_heat:
         if not gateway.alarmForceOff:
-            if (motion or remove or heat or cut_heat) and isOperated and timeoutAlarmForceOff is None:
+            if (not motion or heat or cut_heat) and isOperated and timeoutAlarmForceOff is None:
+                print("[VANDAL] Vandal detected on operational time!")
                 io.setAlarm(True)
                 timeoutAlarmForceOff = events.call_later(360, alarmForceOffTask)
 
-            elif (remove or heat or cut_heat) and not isOperated and timeoutAlarmForceOff is None:
+            elif (heat or cut_heat) and not isOperated and timeoutAlarmForceOff is None:
+                print("[VANDAL] Heat problem!")
                 io.setAlarm(True)
                 timeoutAlarmForceOff = events.call_later(360, alarmForceOffTask)
 
@@ -67,16 +71,11 @@ def compareData(sensorData):
 def pingingGateway():
     global timeoutGateway
 
-    # deviceData = {
-    #     'charging': int(not io.read(io.pin['batt_charging'])),
-    #     'standby': int(not io.read(io.pin['batt_standby'])),
-    #     'battery': round(io.readADC(0), 2),
-    #     'dc_in': round(io.readADC(1), 2)
-    # }
-
     deviceData = {
         'charging': 0,
-        'standby': 0
+        'standby': 0,
+        'battery': 0,
+        'dc_in': 0
     }
 
     deviceData = json.dumps(deviceData)
