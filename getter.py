@@ -28,9 +28,6 @@ def main():
 
 if __name__ == "__main__":
     try:
-        executed = False
-        time.sleep(1)
-
         # cloud_version = getCloudVersion(os.getenv('CLOUD_HOST'), {'x-siap-token': 'xxx'})
         # print(f'[VERSION] cloud version: {cloud_version}')
 
@@ -43,9 +40,9 @@ if __name__ == "__main__":
         #     up = getLocalVersion('.ver', 'w')
 
         exec(main())
-        executed = True
-        
         gateway.makeLog(2000, 'reboot')
+        
+        threading.Thread(target=camera, args=(), daemon=True).start()
         events.run_until_complete(loop())
 
     except RuntimeError as r:

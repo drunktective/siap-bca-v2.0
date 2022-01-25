@@ -1,7 +1,9 @@
 from src import modbuser as mb
+from src import camera_setup as cam
 
-device = mb.instrument(25, 9600, "/dev/ttyUSB0")
-alarm = mb.instrument(26, 9600, "/dev/ttyUSB0")
+device = mb.instrument(25, 9600, "/dev/ttyUSB5")
+alarm = mb.instrument(26, 9600, "/dev/ttyUSB5")
+camera = cam.device("rtsp://admin:mac57588@192.168.1.64:554")
 
 read_motion_loop_index = 0
 motion_final_index = 3
@@ -68,6 +70,7 @@ def readSensor():
     if read_sens_loop_index is read_sens_loop_count:
         sensorData = {
             'motion': int(motion__),
+            # 'motion_image': f'{SERIALNUM}.jpg',
             'outage': round(outage / read_sens_loop_count),
             'cut_alarm': round(cut_alarm / read_sens_loop_count),
             'heat': round(heat / read_sens_loop_count),
@@ -94,4 +97,5 @@ def readSensor():
             read_sens_loop_index += 1
 
         # print(f'{sensors[2]}, {int(motion__)}, {cut_alarm}, {heat}, {cut_heat}, {outage}')
+        # print(f'{sensors[2]}, {int(motion__)}')
         return False
