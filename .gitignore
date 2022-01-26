@@ -1,4 +1,5 @@
 __pycache__
 .machine-logs
 .ver
+captured
 test.py
