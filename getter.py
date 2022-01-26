@@ -1,7 +1,16 @@
 import subprocess, requests, time, sys, os
 
-from dotenv import load_dotenv
-load_dotenv('/boot/.env')
+def load_env():
+    from dotenv import load_dotenv
+    env = '.env'
+    try:
+        with open(f'/boot/{env}', 'r') as file:
+            file.read()
+
+        return load_dotenv(f'/boot/{env}')
+
+    except:
+        return load_dotenv(env)
 
 def getCloudVersion(host, header):
     version = requests.get(host, headers=header)
@@ -39,6 +48,7 @@ if __name__ == "__main__":
         #     time.sleep(1)
         #     up = getLocalVersion('.ver', 'w')
 
+        load_env()
         exec(main())
         gateway.makeLog(2000, 'reboot')
         

@@ -39,7 +39,7 @@ def captureUpload(filename, imgObject, SERIALNUM, now):
 
         cv2.imwrite(f'captured/{filename}.jpg', imgObject)
 
-        # requests.post(os.environ.get('UPLOAD_URL'), files={"file": open("captured/{}.jpg".format(filename), "rb")})
+        requests.post(os.environ.get('UPLOAD_URL'), files={"file": open("captured/{}.jpg".format(filename), "rb")})
 
         print('[MOTION] Capture success')
 

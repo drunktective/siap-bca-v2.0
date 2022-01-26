@@ -83,7 +83,9 @@ def readSensor():
             'cut_heat': round(cut_heat / read_sens_loop_count)
         }
 
-        if cam.capName is not None: sensorData['motion_image'] = capName
+        read_sens_loop_index = 0
+        capture_name = cam.capture_name()
+        if capture_name is not None: sensorData['motion_image'] = f'{capture_name}.jpg'
 
         motion__ = False
         outage = 0
@@ -94,9 +96,8 @@ def readSensor():
 
     else:
         sensors = mb.read_pool(device, 8)
-        
         if sensors:
-            motion__ = cam.motion_record() if isCameraOn else not readMotion(sensors[2])
+            motion__ = not cam.motion_record() if isCameraOn else not readMotion(sensors[2])
             cut_alarm += not mb.write_pool(alarm, 0, alarmState)
             heat += not sensors[4]
             cut_heat += not sensors[3]
