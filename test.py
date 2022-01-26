@@ -1,18 +1,19 @@
-import cv2, asyncio
+from src import modbuser as mb
+import time
 
-cam = cv2.VideoCapture("rtsp://admin:mac57588@192.168.1.64:554/1")
+# device = mb.instrument(25, 9600, "/dev/ttyS3")
+# time.sleep(2)
 
-ret, frame = cam.read()
+# while True:
+#     print(mb.read_pool(device, 8))
+#     time.sleep(0.5)
 
-while True:
-    ret, frame = cam.read()
-    if not ret:
-        print("failed to grab frame")
-        break
+sensorData = {
+    'test': 1
+}
 
-    img_name = '../captured/opencv_frame_1.png'
-    cv2.imwrite(img_name, frame)
-    print("{} written!".format(img_name))
-    break
+print(sensorData)
+sensorData['te2'] = "rrr"
 
-cam.release()
+time.sleep(0.5)
+print(sensorData)

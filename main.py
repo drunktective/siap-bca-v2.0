@@ -4,7 +4,6 @@ from src import camera_setup as cam
 
 import threading
 
-import cv2
 import asyncio
 import json
 import time
@@ -32,8 +31,6 @@ def compareData(sensorData):
     global temp, timeoutAlarmForceOff
 
     motion, outage, cut_alarm, heat, cut_heat = sensorData['motion'], sensorData['outage'], sensorData['cut_alarm'], sensorData['heat'], sensorData['cut_heat']
-
-    # print(f'{motion}, {outage}, {cut_alarm}, {heat}, {cut_heat}')
 
     isOperated = gateway.checkOperationTime()
 
@@ -99,63 +96,16 @@ def pingingGateway():
 
     return False
 
-nextMotionSend = None
-startDetectMillis = 0
-recorded = []
-waitDetection = 1000
-avg = None
-
-import numpy as np
-import datetime as dt
-
-def imageProcess(frame, currentTime, ms, SERIALNUM):
-    global avg, startDetectMillis, recorded, waitDetection, nextMotionSend
-
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (21, 21), 0)
-
-    if avg is None:
-        avg = gray.copy().astype("float")
-        return 
-    
-    cv2.accumulateWeighted(gray, avg, 0.05)
-    frameDelta = cv2.absdiff(gray, cv2.convertScaleAbs(avg))
-
-    thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
-    thresh = cv2.dilate(thresh, None, iterations=2)
-
-    contours, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    if len(contours) > 0:
-        frame = cv2.drawContours(frame, contours, -1, (0, 255, 0), 2)
-
-        area = np.sum([cv2.contourArea(c) for c in contours])
-        
-        if area > 3500 and nextMotionSend is None: 
-            if startDetectMillis == 0: startDetectMillis = ms
-
-            else:
-                if ms - startDetectMillis > waitDetection and len(recorded) < 6:
-                    waitDetection += 1000
-                    recorded.append(cv2.resize(frame, (640, 400)))
-
-                    if len(recorded) == 6:
-                        nextMotionSend = currentTime + dt.timedelta(minutes=30)
-
-                        v1 = np.vstack((recorded[0], recorded[2], recorded[4]))
-                        v2 = np.vstack((recorded[1], recorded[3], recorded[5]))
-                        horz = np.hstack((v1, v2))
-
-                        cam.captureUpload(f'{SERIALNUM}-{startDetectMillis}', horz, SERIALNUM, currentTime)
-
-                        # captureUpload('{}-{}'.format(SERIALNUM, startDetectMillis), horz)
-
-    else:
-        waitDetection = 1000
-        recorded = []
-        startDetectMillis = 0
-
 def camera():
+    print("[CAMERA] Checking camera connection...")
+    while True:
+        if cam.checkLocalConnection(): break
+        time.sleep(0.5)
+
+    time.sleep(2)
+    io.camSetup()
+    print("[CAMERA] Camera connected!")
+
     while True:
         ms = millis()
         now = gateway.today()
@@ -166,7 +116,7 @@ def camera():
             gateway.captureEvent = False
         
         isOperated = gateway.checkOperationTime()
-        if isOperated: imageProcess(frame, now, ms, gateway.SERIALNUM)
+        if isOperated: cam.imageProcess(frame, now, ms, gateway.SERIALNUM)
 
 async def loop():
     gateway.client.on_connect = gateway.on_connect
@@ -184,10 +134,8 @@ async def loop():
         ms = millis()
         now = gateway.today()
 
-        global nextMotionSend
-        if nextMotionSend is not None and nextMotionSend < now:
-            print("y")
-            nextMotionSend = None
+        if cam.nextMotionSend is not None and cam.nextMotionSend < now:
+            cam.nextMotionSend = None
 
         if ms >= nextLoop + 250:
             nextLoop += 250

@@ -1,9 +1,11 @@
 from src import modbuser as mb
 from src import camera_setup as cam
+import os
 
-device = mb.instrument(25, 9600, "/dev/ttyUSB5")
-alarm = mb.instrument(26, 9600, "/dev/ttyUSB5")
-camera = cam.device("rtsp://admin:mac57588@192.168.1.64:554")
+device = mb.instrument(25, 9600, "/dev/ttyS3")
+alarm = mb.instrument(26, 9600, "/dev/ttyS3")
+camera = None
+isCameraOn = os.getenv('CAMERA')
 
 read_motion_loop_index = 0
 motion_final_index = 3
@@ -20,6 +22,11 @@ read_sens_loop_index = 0
 
 alarmState = False
 sensorData = False
+
+def camSetup():
+    global camera
+    camera = cam.device("rtsp://admin:mac57588@192.168.1.64:554") if isCameraOn else None
+    return camera
 
 def close():
     mb.close_port(device)
@@ -70,26 +77,26 @@ def readSensor():
     if read_sens_loop_index is read_sens_loop_count:
         sensorData = {
             'motion': int(motion__),
-            # 'motion_image': f'{SERIALNUM}.jpg',
             'outage': round(outage / read_sens_loop_count),
             'cut_alarm': round(cut_alarm / read_sens_loop_count),
             'heat': round(heat / read_sens_loop_count),
             'cut_heat': round(cut_heat / read_sens_loop_count)
         }
 
+        if cam.capName is not None: sensorData['motion_image'] = capName
+
         motion__ = False
         outage = 0
         cut_alarm = 0
         heat = 0
         cut_heat = 0
-
-        read_sens_loop_index = 0
         return sensorData
 
     else:
         sensors = mb.read_pool(device, 8)
+        
         if sensors:
-            motion__ = not readMotion(sensors[2])
+            motion__ = cam.motion_record() if isCameraOn else not readMotion(sensors[2])
             cut_alarm += not mb.write_pool(alarm, 0, alarmState)
             heat += not sensors[4]
             cut_heat += not sensors[3]
@@ -97,5 +104,4 @@ def readSensor():
             read_sens_loop_index += 1
 
         # print(f'{sensors[2]}, {int(motion__)}, {cut_alarm}, {heat}, {cut_heat}, {outage}')
-        # print(f'{sensors[2]}, {int(motion__)}')
         return False
