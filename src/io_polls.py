@@ -18,6 +18,7 @@ outage = 0
 cut_alarm = 0
 heat = 0
 cut_heat = 0
+cut_motion = 0
 read_sens_loop_index = 0
 
 alarmState = False
@@ -71,7 +72,7 @@ def readMotion(motion_pin):
     return motion_
 
 def readSensor():
-    global motion__, read_sens_loop_index, outage, cut_alarm, heat, cut_heat
+    global motion__, read_sens_loop_index, outage, cut_alarm, heat, cut_heat, cut_motion
     read_sens_loop_count = 7
 
     if read_sens_loop_index is read_sens_loop_count:
@@ -80,7 +81,8 @@ def readSensor():
             'outage': round(outage / read_sens_loop_count),
             'cut_alarm': round(cut_alarm / read_sens_loop_count),
             'heat': round(heat / read_sens_loop_count),
-            'cut_heat': round(cut_heat / read_sens_loop_count)
+            'cut_heat': round(cut_heat / read_sens_loop_count),
+            'cut_motion': int(cut_motion)
         }
 
         read_sens_loop_index = 0
@@ -92,6 +94,7 @@ def readSensor():
         cut_alarm = 0
         heat = 0
         cut_heat = 0
+        cut_motion = 0
         return sensorData
 
     else:
@@ -102,7 +105,9 @@ def readSensor():
             heat += not sensors[4]
             cut_heat += not sensors[3]
             outage += sensors[7]
+            cut_motion = cam.motion_cut
             read_sens_loop_index += 1
 
         # print(f'{sensors[2]}, {int(motion__)}, {cut_alarm}, {heat}, {cut_heat}, {outage}')
+        # print(cut_motion)
         return False

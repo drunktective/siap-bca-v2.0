@@ -98,12 +98,20 @@ def pingingGateway():
 
 def camera():
     print("[CAMERA] Checking camera connection...")
+    camFirstCheck = 0
+
     while True:
-        if cam.checkLocalConnection(): break
         time.sleep(0.5)
+        camFirstCheck += 1
+        if cam.checkLocalConnection(): break
+        if camFirstCheck == 240:
+            print("[CAMERA] Camera connection failed!") 
+            cam.camera_cutset(1)
 
     time.sleep(2)
     io.camSetup()
+    cam.camera_cutset(0)
+    nextPing = millis()
     print("[CAMERA] Camera connected!")
 
     while True:
@@ -111,12 +119,17 @@ def camera():
         now = gateway.today()
         _, frame = io.camera.read()
 
-        if gateway.captureEvent:
-            cam.captureUpload(f'manual-{gateway.SERIALNUM}-{now.strftime("%d%m%y_%H:%M:%S")}', frame, gateway.SERIALNUM, now)
-            gateway.captureEvent = False
-        
-        isOperated = gateway.checkOperationTime()
-        if isOperated: cam.imageProcess(frame, now, ms, gateway.SERIALNUM)
+        if frame is not None:
+            cam.camera_cutset(0)
+            if gateway.captureEvent:
+                cam.captureUpload(f'manual-{gateway.SERIALNUM}-{now.strftime("%d%m%y_%H:%M:%S")}', frame, gateway.SERIALNUM, now)
+                gateway.captureEvent = False
+
+            isOperated = gateway.checkOperationTime()
+            if isOperated: cam.imageProcess(frame, now, ms, gateway.SERIALNUM)
+
+        else:
+            cam.camera_cutset(1)
 
 async def loop():
     gateway.client.on_connect = gateway.on_connect
@@ -127,7 +140,8 @@ async def loop():
 
     nextLoop = millis()
     nextPing = millis()
-
+    camErrorCount = 0
+    
     await asyncio.sleep(1)
 
     while True:
@@ -139,14 +153,15 @@ async def loop():
 
         if ms >= nextLoop + 250:
             nextLoop += 250
-            
+
             sensorData = io.readSensor()
             if sensorData:
                 compareData(sensorData)
 
             offTimeReboot = gateway.offTimeReboot()
-            if gateway.triggerReboot or offTimeReboot:
-                raise Exception("[ERROR] Reboot triggered")
+            if gateway.triggerReboot or offTimeReboot: raise Exception("[ERROR] Reboot triggered")
+
+            if camErrorCount == 2: raise Exception("[ERROR] camera cut on the way")
 
 
         if ms >= nextPing + 14000:
@@ -154,7 +169,8 @@ async def loop():
 
             res = pingingGateway()
 
-            if not res:
-                raise Exception("[ERROR] gateway not fetched")
+            if not res: raise Exception("[ERROR] gateway not fetched")
+
+            if cam.motion_cut: camErrorCount += 1 
 
         await asyncio.sleep(0.01)

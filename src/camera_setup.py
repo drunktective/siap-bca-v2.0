@@ -9,6 +9,12 @@ recorded = []
 waitDetection = 1000
 avg = None
 capName = None
+motion_cut = 0
+
+def camera_cutset(mot):
+    global motion_cut
+    motion_cut = mot
+    return motion_cut
 
 def motion_record():
     if len(recorded) == 6:
@@ -68,7 +74,7 @@ def imageProcess(frame, currentTime, ms, SERIALNUM):
         frame = cv2.drawContours(frame, contours, -1, (0, 255, 0), 2)
 
         area = np.sum([cv2.contourArea(c) for c in contours])
-        
+
         if area > 3500 and nextMotionSend is None: 
             if startDetectMillis == 0: startDetectMillis = ms
 
