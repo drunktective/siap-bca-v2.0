@@ -142,6 +142,7 @@ async def loop():
 
     nextLoop = millis()
     nextPing = millis()
+    camErrorCount = 0
     
     await asyncio.sleep(1)
 
@@ -158,7 +159,10 @@ async def loop():
             sensorData = io.readSensor()
             if sensorData:
                 compareData(sensorData)
-                if cam.motion_cut: raise Exception("[ERROR] Motion cut detected!")
+                if cam.motion_cut: 
+                    camErrorCount += 1
+                    if camErrorCount == 7:
+                        raise Exception("[ERROR] Motion cut detected!")
 
             offTimeReboot = gateway.offTimeReboot()
             if gateway.triggerReboot or offTimeReboot: raise Exception("[ERROR] Reboot triggered")
