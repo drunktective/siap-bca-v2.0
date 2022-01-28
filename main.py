@@ -104,7 +104,7 @@ def camera():
         time.sleep(0.5)
         camFirstCheck += 1
         if cam.checkLocalConnection(): break
-        if camFirstCheck == 240:
+        if camFirstCheck >= 240:
             print("[CAMERA] Camera connection failed!") 
             cam.camera_cutset(1)
 
