@@ -101,12 +101,14 @@ def camera():
     camFirstCheck = 0
 
     while True:
-        time.sleep(0.5)
+        time.sleep(8.5)
         camFirstCheck += 1
-        if cam.checkLocalConnection(): break
-        if camFirstCheck >= 240:
+        print(f'[CAMERA] Camera connecting count: {camFirstCheck}')
+        if camFirstCheck >= 12:
             print("[CAMERA] Camera connection failed!") 
             cam.camera_cutset(1)
+            
+        if cam.checkLocalConnection(): break
 
     time.sleep(2)
     io.camSetup()
@@ -140,7 +142,6 @@ async def loop():
 
     nextLoop = millis()
     nextPing = millis()
-    camErrorCount = 0
     
     await asyncio.sleep(1)
 
@@ -157,11 +158,10 @@ async def loop():
             sensorData = io.readSensor()
             if sensorData:
                 compareData(sensorData)
+                if cam.motion_cut: raise Exception("[ERROR] Motion cut detected!")
 
             offTimeReboot = gateway.offTimeReboot()
             if gateway.triggerReboot or offTimeReboot: raise Exception("[ERROR] Reboot triggered")
-
-            if camErrorCount == 2: raise Exception("[ERROR] camera cut on the way")
 
 
         if ms >= nextPing + 14000:
@@ -170,7 +170,5 @@ async def loop():
             res = pingingGateway()
 
             if not res: raise Exception("[ERROR] gateway not fetched")
-
-            if cam.motion_cut: camErrorCount += 1 
 
         await asyncio.sleep(0.01)
