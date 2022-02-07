@@ -103,7 +103,7 @@ def readSensor():
             motion__ = not cam.motion_record() if isCameraOn else not readMotion(sensors[2])
             cut_alarm += not mb.write_pool(alarm, 0, alarmState)
             heat += not sensors[4]
-            cut_heat += not sensors[3]
+            cut_heat += sensors[3]
             outage += sensors[7]
             cut_motion = cam.motion_cut
             read_sens_loop_index += 1

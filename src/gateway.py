@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import datetime as dt
 import subprocess, requests, time, sys, os
+from src.camera_setup import activateMotion
 
 version = os.getenv('VERSION')
 SERIALNUM = os.getenv('DEVICE_NUMBER')
@@ -115,6 +116,9 @@ def on_connect(client, userdata, flags, rc):
 
             if topic == 'capture' and not captureEvent:
                 captureEvent = True
+
+            if topic == 'reset':
+                activateMotion()
 
         client.subscribe(f'siap/{SERIALNUM}/#')
         client.on_message = on_message
