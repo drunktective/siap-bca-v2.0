@@ -2,10 +2,12 @@ from src import modbuser as mb
 from src import camera_setup as cam
 import os
 
-device = mb.instrument(25, 9600, "/dev/ttyS3")
-alarm = mb.instrument(26, 9600, "/dev/ttyS3")
+# device = mb.instrument(25, 9600, "/dev/ttyS3")
+# alarm = mb.instrument(25, 9600, "/dev/ttyS3")
+device = mb.instrument(25, 9600, "/dev/ttyUSB0")
+alarm = mb.instrument(25, 9600, "/dev/ttyUSB0")
+camera_device = os.getenv('CAMERA_DEVICE')
 camera = None
-isCameraOn = os.getenv('CAMERA')
 
 read_motion_loop_index = 0
 motion_final_index = 3
@@ -24,9 +26,13 @@ read_sens_loop_index = 0
 alarmState = False
 sensorData = False
 
+def isCameraOn():
+    if camera_device != "0": return True
+    return False
+
 def camSetup():
     global camera
-    camera = cam.device("rtsp://admin:mac57588@192.168.1.64:554") if isCameraOn else None
+    camera = cam.device(camera_device)
     return camera
 
 def close():
@@ -100,7 +106,7 @@ def readSensor():
     else:
         sensors = mb.read_pool(device, 8)
         if sensors:
-            motion__ = not cam.motion_record() if isCameraOn else not readMotion(sensors[2])
+            motion__ = not cam.motion_record() if camera is not None else not readMotion(sensors[2])
             cut_alarm += not mb.write_pool(alarm, 0, alarmState)
             heat += not sensors[4]
             cut_heat += sensors[3]

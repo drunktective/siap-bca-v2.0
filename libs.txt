@@ -1,4 +1,4 @@
-asyncio
 minimalmodbus
 paho-mqtt
 python-dotenv
+opencv-python-headless

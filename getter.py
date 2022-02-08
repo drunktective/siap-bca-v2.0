@@ -52,14 +52,14 @@ if __name__ == "__main__":
         exec(main())
         gateway.makeLog(2000, 'reboot')
         
-        threading.Thread(target=camera, args=(), daemon=True).start()
-        events.run_until_complete(loop())
+        # threading.Thread(target=camera, args=(), daemon=True).start()
+        loop()
 
     except RuntimeError as r:
         sys.exit(r)
 
     except Exception as e:
-        gateway.reboot(io.close(), events.close(), e)
+        gateway.reboot(io.close(), e)
 
     except KeyboardInterrupt:
         sys.exit("[ERROR] Keyboard Interrupted")

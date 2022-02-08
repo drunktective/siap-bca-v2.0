@@ -133,9 +133,8 @@ def on_disconnect(client, userdata,  rc):
     global isConnected
     isConnected = False
 
-def reboot(pinout, close, error):
+def reboot(pinout, error):
     pinout
-    close
     print(error)
     time.sleep(1)
     sys.exit("[REBOOT] rebooting...")
