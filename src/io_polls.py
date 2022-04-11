@@ -4,8 +4,8 @@ import os
 
 # device = mb.instrument(25, 9600, "/dev/ttyS3")
 # alarm = mb.instrument(25, 9600, "/dev/ttyS3")
-device = mb.instrument(25, 9600, "/dev/ttyUSB0")
-alarm = mb.instrument(25, 9600, "/dev/ttyUSB0")
+device = mb.instrument(25, 9600, "/dev/ttyUSB4")
+alarm = mb.instrument(25, 9600, "/dev/ttyUSB4")
 camera_device = os.getenv('CAMERA_DEVICE')
 camera = None
 

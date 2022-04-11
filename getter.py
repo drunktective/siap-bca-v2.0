@@ -11,7 +11,7 @@ def load_env():
             env = f'/boot/.env'
 
     except:
-        return load_dotenv(f'/media/bcafile/{env}')
+        return load_dotenv(env)
 
 def envCheck(env_file):
     return path.exists(env_file)
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         #     time.sleep(1)
         #     up = getLocalVersion('.ver', 'w')
 
-        if envCheck('/media/bca_env/env.txt'): system('cp /media/bca_env/env.txt .env')
+        if envCheck('/media/bcafile/env.txt'): system('cp /media/bcafile/env.txt .env')
 
         if not envCheck('.env'): raise RuntimeError("[ERROR] Env not found on any local system!")
 
