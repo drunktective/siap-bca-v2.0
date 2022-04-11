@@ -27,8 +27,7 @@ alarmState = False
 sensorData = False
 
 def isCameraOn():
-    if camera_device != "0": return True
-    return False
+    return camera_device != "0"
 
 def camSetup():
     global camera
@@ -47,12 +46,10 @@ def setAlarm(state):
 def readMotion(motion_pin):
     global motion, motion_final, motion_final_index, motion_, read_motion_loop_index
 
-    motion_filter_top = 0
-    motion_filter_bottom = 10
     read_motion_loop_count = 35
-    motion_final_count = 3
-
     if read_motion_loop_index == read_motion_loop_count:
+        motion_filter_top = 0
+        motion_filter_bottom = 10
         if motion >= (read_motion_loop_count / 2) - motion_filter_bottom and motion <= (read_motion_loop_count - motion_filter_top):
             motion_final += 1
 
@@ -61,11 +58,9 @@ def readMotion(motion_pin):
             motion_final_index -= 1
 
         else:
-            motion_ = False
+            motion_final_count = 3
 
-            if motion_final >= (motion_final_count - 1):
-                motion_ = True
-
+            motion_ = motion_final >= motion_final_count - 1
             motion_final_index = motion_final_count
             motion_final = 0
 
@@ -104,8 +99,7 @@ def readSensor():
         return sensorData
 
     else:
-        sensors = mb.read_pool(device, 8)
-        if sensors:
+        if sensors := mb.read_pool(device, 8):
             motion__ = not cam.motion_record() if camera is not None else not readMotion(sensors[2])
             cut_alarm += not mb.write_pool(alarm, 0, alarmState)
             heat += not sensors[4]

@@ -42,16 +42,18 @@ def checkOperationTime():
 
         on, off, duration, now = operationalTime[0], operationalTime[1], operationalTime[2], currentTime.time()
 
-        if (duration >= 2): 
-            if on > off:
-                if now > on or now < off:
-                    return True
-            elif on < off:
-                if now > on and now < off:
-                    return True
-            elif now == on:
-                return True
-
+        if (duration >= 2) and (
+            on > off
+            and (now > on or now < off)
+            or on <= off
+            and on < off
+            and now > on
+            and now < off
+            or on <= off
+            and on >= off
+            and now == on
+        ):
+            return True
     return False
 
 def offTimeReboot():

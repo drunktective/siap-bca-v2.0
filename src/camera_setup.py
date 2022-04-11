@@ -17,17 +17,13 @@ def camera_cutset(mot):
     return motion_cut
 
 def motion_record():
-    if len(recorded) == 6:
-        return True
-
-    return False
+    return len(recorded) == 6
 
 def capture_name():
     return capName
 
 def device(loc):
-    cap = cv2.VideoCapture(loc)
-    return cap
+    return cv2.VideoCapture(loc)
 
 def activateMotion():
     global nextMotionSend
@@ -47,7 +43,11 @@ def captureUpload(filename, imgObject, SERIALNUM, now):
         cv2.putText(imgObject, now.strftime("%A, %d %B %Y %I:%M:%S%p"), (25, imgObject.shape[0] - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 1)
         cv2.putText(imgObject, SERIALNUM, (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
         cv2.imwrite(f'captured/{filename}.jpg', imgObject)
-        requests.post(os.environ.get('UPLOAD_URL'), files={"file": open("captured/{}.jpg".format(filename), "rb")})
+        requests.post(
+            os.environ.get('UPLOAD_URL'),
+            files={"file": open(f"captured/{filename}.jpg", "rb")},
+        )
+
         print('[MOTION] Capture success')
 
     except:
@@ -62,7 +62,7 @@ def imageProcess(frame, currentTime, ms, SERIALNUM):
     if avg is None:
         avg = gray.copy().astype("float")
         return 
-    
+
     cv2.accumulateWeighted(gray, avg, 0.05)
     frameDelta = cv2.absdiff(gray, cv2.convertScaleAbs(avg))
 
@@ -78,21 +78,19 @@ def imageProcess(frame, currentTime, ms, SERIALNUM):
 
         if area > 3500 and nextMotionSend is None: 
             if startDetectMillis == 0: startDetectMillis = ms
+            elif ms - startDetectMillis > waitDetection and len(recorded) < 6:
+                waitDetection += 1000
+                recorded.append(cv2.resize(frame, (640, 400)))
 
-            else:
-                if ms - startDetectMillis > waitDetection and len(recorded) < 6:
-                    waitDetection += 1000
-                    recorded.append(cv2.resize(frame, (640, 400)))
+                if len(recorded) == 6:
+                    nextMotionSend = currentTime + dt.timedelta(minutes=30)
 
-                    if len(recorded) == 6:
-                        nextMotionSend = currentTime + dt.timedelta(minutes=30)
+                    v1 = np.vstack((recorded[0], recorded[2], recorded[4]))
+                    v2 = np.vstack((recorded[1], recorded[3], recorded[5]))
+                    horz = np.hstack((v1, v2))
 
-                        v1 = np.vstack((recorded[0], recorded[2], recorded[4]))
-                        v2 = np.vstack((recorded[1], recorded[3], recorded[5]))
-                        horz = np.hstack((v1, v2))
-
-                        capName = f'{SERIALNUM}-{startDetectMillis}'
-                        captureUpload(capName, horz, SERIALNUM, currentTime)
+                    capName = f'{SERIALNUM}-{startDetectMillis}'
+                    captureUpload(capName, horz, SERIALNUM, currentTime)
 
     else:
         waitDetection = 1000

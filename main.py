@@ -104,7 +104,7 @@ def camera():
         if camFirstCheck >= 12:
             print("[CAMERA] Camera connection failed!") 
             cam.camera_cutset(1)
-            
+
         if cam.checkLocalConnection(): break
 
     time.sleep(2)
@@ -124,9 +124,8 @@ def camera():
                 cam.captureUpload(f'manual-{gateway.SERIALNUM}-{now.strftime("%d%m%y_%H:%M:%S")}', frame, gateway.SERIALNUM, now)
                 gateway.captureEvent = False
 
-            isOperated = gateway.checkOperationTime()
-            if isOperated: cam.imageProcess(frame, now, ms, gateway.SERIALNUM)
-
+            if isOperated := gateway.checkOperationTime():
+                cam.imageProcess(frame, now, ms, gateway.SERIALNUM)
         else:
             cam.camera_cutset(1)
 
@@ -140,8 +139,8 @@ def loop():
     nextLoop = millis()
     nextPing = millis()
 
-    camCheck = io.isCameraOn()
-    if camCheck: threading.Thread(target=camera, args=(), daemon=True).start()
+    if camCheck := io.isCameraOn():
+        threading.Thread(target=camera, args=(), daemon=True).start()
     camErrorCount = 0
 
     time.sleep(1)
@@ -155,8 +154,7 @@ def loop():
         if ms >= nextLoop + 250:
             nextLoop += 250
 
-            sensorData = io.readSensor()
-            if sensorData:
+            if sensorData := io.readSensor():
                 compareData(sensorData)
                 if cam.motion_cut: 
                     camErrorCount += 1

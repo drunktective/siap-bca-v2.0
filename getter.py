@@ -8,7 +8,7 @@ def load_env():
         with open(f'/boot/{env}', 'r') as file:
             file.read()
             file.close()
-            env = f'/boot/.env'
+            env = '/boot/.env'
 
     except:
         return load_dotenv(f'/media/bcafile/{env}')
