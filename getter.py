@@ -11,7 +11,7 @@ def load_env():
             env = f'/boot/.env'
 
     except:
-        return load_dotenv(env)
+        return load_dotenv(f'/media/bcafile/{env}')
 
 def envCheck(env_file):
     return path.exists(env_file)
