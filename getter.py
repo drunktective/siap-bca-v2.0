@@ -10,7 +10,7 @@ def load_env():
         return load_dotenv(f'/boot/{env}')
 
     except:
-        return load_dotenv(env)
+        return load_dotenv(f'/media/bcafile/{env}')
 
 def getCloudVersion(host, header):
     version = requests.get(host, headers=header)
