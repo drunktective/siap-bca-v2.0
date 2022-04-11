@@ -1,14 +1,11 @@
 from src import io_polls as io
 from src import gateway
+from src import camera_setup as cam
 
-import asyncio
-import json
-import time
+import threading, json, time
 
-events = asyncio.get_event_loop()
 timeoutAlarmForceOff = None
 timeoutGateway = None
-
 temp = {}
 
 def gatewayRestart():
@@ -19,8 +16,8 @@ def millis():
 
 def alarmForceOffTask():
     global timeoutAlarmForceOff
-
     io.setAlarm(False)
+    timeoutAlarmForceOff.cancel()
     timeoutAlarmForceOff = None
     gateway.setAlarmOff(True)
 
@@ -29,8 +26,6 @@ def compareData(sensorData):
 
     motion, outage, cut_alarm, heat, cut_heat = sensorData['motion'], sensorData['outage'], sensorData['cut_alarm'], sensorData['heat'], sensorData['cut_heat']
 
-    print(f'{motion}, {outage}, {cut_alarm}, {heat}, {cut_heat}')
-
     isOperated = gateway.checkOperationTime()
 
     if not motion or outage or cut_alarm or heat or cut_heat:
@@ -38,12 +33,14 @@ def compareData(sensorData):
             if (not motion or heat or cut_heat) and isOperated and timeoutAlarmForceOff is None:
                 print("[VANDAL] Vandal detected on operational time!")
                 io.setAlarm(True)
-                timeoutAlarmForceOff = events.call_later(360, alarmForceOffTask)
+                timeoutAlarmForceOff = threading.Timer(360, alarmForceOffTask)
+                timeoutAlarmForceOff.start()
 
             elif (heat or cut_heat) and not isOperated and timeoutAlarmForceOff is None:
                 print("[VANDAL] Heat problem!")
                 io.setAlarm(True)
-                timeoutAlarmForceOff = events.call_later(360, alarmForceOffTask)
+                timeoutAlarmForceOff = threading.Timer(360, alarmForceOffTask)
+                timeoutAlarmForceOff.start()
 
         else:
             io.setAlarm(False)
@@ -90,12 +87,50 @@ def pingingGateway():
 
     else:
         if timeoutGateway is None:
-            timeoutGateway = events.call_later(20, gatewayRestart)
+            timeoutGateway = threading.Timer(20, gatewayRestart)
+            timeoutGateway.start()
             return True
 
     return False
 
-async def loop():
+def camera():
+    print("[CAMERA] Checking camera connection...")
+    camFirstCheck = 0
+
+    while True:
+        time.sleep(8.5)
+        camFirstCheck += 1
+        print(f'[CAMERA] Camera connecting count: {camFirstCheck}')
+        if camFirstCheck >= 12:
+            print("[CAMERA] Camera connection failed!") 
+            cam.camera_cutset(1)
+            
+        if cam.checkLocalConnection(): break
+
+    time.sleep(2)
+    io.camSetup()
+    cam.camera_cutset(0)
+    nextPing = millis()
+    print("[CAMERA] Camera connected!")
+
+    while True:
+        ms = millis()
+        now = gateway.today()
+        _, frame = io.camera.read()
+
+        if frame is not None:
+            cam.camera_cutset(0)
+            if gateway.captureEvent:
+                cam.captureUpload(f'manual-{gateway.SERIALNUM}-{now.strftime("%d%m%y_%H:%M:%S")}', frame, gateway.SERIALNUM, now)
+                gateway.captureEvent = False
+
+            isOperated = gateway.checkOperationTime()
+            if isOperated: cam.imageProcess(frame, now, ms, gateway.SERIALNUM)
+
+        else:
+            cam.camera_cutset(1)
+
+def loop():
     gateway.client.on_connect = gateway.on_connect
     gateway.client.on_disconnect = gateway.on_disconnect
     gateway.client.username_pw_set(gateway.config['mqtt_uname'], gateway.config['mqtt_pass'])
@@ -105,29 +140,37 @@ async def loop():
     nextLoop = millis()
     nextPing = millis()
 
-    await asyncio.sleep(1)
+    camCheck = io.isCameraOn()
+    if camCheck: threading.Thread(target=camera, args=(), daemon=True).start()
+    camErrorCount = 0
+
+    time.sleep(1)
 
     while True:
         ms = millis()
+        now = gateway.today()
+
+        if cam.nextMotionSend is not None and cam.nextMotionSend < now: cam.nextMotionSend = None
 
         if ms >= nextLoop + 250:
             nextLoop += 250
-            
+
             sensorData = io.readSensor()
             if sensorData:
                 compareData(sensorData)
+                if cam.motion_cut: 
+                    camErrorCount += 1
+                    if camErrorCount == 7:
+                        raise Exception("[ERROR] Motion cut detected!")
 
             offTimeReboot = gateway.offTimeReboot()
-            if gateway.triggerReboot or offTimeReboot:
-                raise Exception("[ERROR] Reboot triggered")
+            if gateway.triggerReboot or offTimeReboot: raise Exception("[ERROR] Reboot triggered")
 
 
         if ms >= nextPing + 14000:
             nextPing += 14000
 
             res = pingingGateway()
+            if not res: raise Exception("[ERROR] gateway not fetched")
 
-            if not res:
-                raise Exception("[ERROR] gateway not fetched")
-
-        await asyncio.sleep(0.01)
+        time.sleep(0.01)

@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import datetime as dt
 import subprocess, requests, time, sys, os
+from src.camera_setup import activateMotion
 
 version = os.getenv('VERSION')
 SERIALNUM = os.getenv('DEVICE_NUMBER')
@@ -17,6 +18,10 @@ alarmForceOff = False
 isConnected = False
 operationalTime = None
 triggerReboot = False
+captureEvent = False
+
+def today():
+    return dt.datetime.now()
 
 def setAlarmOff(state):
     global alarmForceOff
@@ -33,7 +38,7 @@ def setOperationalTime(raw):
 
 def checkOperationTime():
     if isConnected:
-        currentTime = dt.datetime.now()
+        currentTime = today()
 
         on, off, duration, now = operationalTime[0], operationalTime[1], operationalTime[2], currentTime.time()
 
@@ -50,7 +55,7 @@ def checkOperationTime():
     return False
 
 def offTimeReboot():
-    currentTime = dt.datetime.now()
+    currentTime = today()
     off, now = operationalTime[1].strftime("%H:%M"), currentTime.time().strftime("%H:%M")
 
     if now == off:
@@ -61,9 +66,10 @@ def offTimeReboot():
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         def on_message(client, userdata, msg):
+            global triggerReboot, alarmForceOff, isConnected, captureEvent
+
             topic = msg.topic.replace(f'siap/{SERIALNUM}/', '')
             payload = msg.payload.decode("utf-8")
-            global triggerReboot, alarmForceOff, isConnected
 
             if topic == 'alarm':
                 if payload == 'OFF': 
@@ -80,37 +86,39 @@ def on_connect(client, userdata, flags, rc):
                 print("[GATEWAY] synced to SIAP!")
                 isConnected = True
 
-            if topic == 'version':
-                if payload == 'check':
-                    with open('.ver', 'r') as file:
-                        version = file.read().rstrip('\n')
-                        file.close()
+            if topic == 'version' and payload == 'check':
+                with open('.ver', 'r') as file:
+                    version = file.read().rstrip('\n')
+                    file.close()
 
-                    print(f'[VERSION] machine version: {version}')
-                    client.publish(f'siap/{SERIALNUM}/version', version)
+                print(f'[VERSION] machine version: {version}')
+                client.publish(f'siap/{SERIALNUM}/version', version)
 
-            if topic == 'logs':
-                if payload != '0':
-                    log = {'log': makeLog(payload, 'load').stdout.decode('utf-8')}
-                    url = 'http://192.168.50.143:3000'
-                    requests.post(url, data=log)
-                    print(f'[LOGS] sent {payload} last log')
-                    client.publish(f'siap/{SERIALNUM}/logs', '0')
+            if topic == 'logs' and payload != '0':
+                log = {'log': makeLog(payload, 'load').stdout.decode('utf-8')}
+                url = 'http://192.168.50.143:3000'
+                requests.post(url, data=log)
+                print(f'[LOGS] sent {payload} last log')
+                client.publish(f'siap/{SERIALNUM}/logs', '0')
 
-            if topic == 'reboot':
-                if payload == '1':
-                    time.sleep(0.2)
-                    client.publish(f'siap/{SERIALNUM}/reboot', '0')
-                    time.sleep(1)
-                    triggerReboot = True
+            if topic == 'reboot' and payload == '1':
+                time.sleep(0.2)
+                client.publish(f'siap/{SERIALNUM}/reboot', '0')
+                time.sleep(1)
+                triggerReboot = True
 
-            if topic == 'update':
-                if payload == 'yes':
-                    res = subprocess.run("git pull", shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
-                    print(res)
-                    client.publish(f'siap/{SERIALNUM}/update', '0')
-                    time.sleep(1)
-                    triggerReboot = True
+            if topic == 'update' and payload == 'yes':
+                res = subprocess.run("git pull", shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
+                print(res)
+                client.publish(f'siap/{SERIALNUM}/update', '0')
+                time.sleep(1)
+                triggerReboot = True
+
+            if topic == 'capture' and not captureEvent:
+                captureEvent = True
+
+            if topic == 'reset':
+                activateMotion()
 
         client.subscribe(f'siap/{SERIALNUM}/#')
         client.on_message = on_message
@@ -125,9 +133,8 @@ def on_disconnect(client, userdata,  rc):
     global isConnected
     isConnected = False
 
-def reboot(pinout, close, error):
+def reboot(pinout, error):
     pinout
-    close
     print(error)
     time.sleep(1)
     sys.exit("[REBOOT] rebooting...")

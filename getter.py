@@ -1,7 +1,20 @@
-import subprocess, requests, time, sys, os
+import subprocess, requests, time, sys 
+from os import getenv, system, path
 
-from dotenv import load_dotenv
-load_dotenv('/boot/.env')
+def load_env():
+    from dotenv import load_dotenv
+    env = '.env'
+    try:
+        with open(f'/boot/{env}', 'r') as file:
+            file.read()
+            file.close()
+            env = f'/boot/.env'
+
+    except:
+        return load_dotenv(f'/media/bcafile/{env}')
+
+def envCheck(env_file):
+    return path.exists(env_file)
 
 def getCloudVersion(host, header):
     version = requests.get(host, headers=header)
@@ -27,11 +40,10 @@ def main():
     return sketch
 
 if __name__ == "__main__":
-    try:
-        executed = False
-        time.sleep(1)
+    from dotenv import load_dotenv, find_dotenv
 
-        # cloud_version = getCloudVersion(os.getenv('CLOUD_HOST'), {'x-siap-token': 'xxx'})
+    try:
+        # cloud_version = getCloudVersion(getenv('CLOUD_HOST'), {'x-siap-token': 'xxx'})
         # print(f'[VERSION] cloud version: {cloud_version}')
 
         # local_version = getLocalVersion('.ver', 'r')
@@ -42,17 +54,20 @@ if __name__ == "__main__":
         #     time.sleep(1)
         #     up = getLocalVersion('.ver', 'w')
 
+        if envCheck('/media/bca_env/env.txt'): system('cp /media/bca_env/env.txt .env')
+
+        if not envCheck('.env'): raise RuntimeError("[ERROR] Env not found on any local system!")
+
+        load_env()
         exec(main())
-        executed = True
-        
         gateway.makeLog(2000, 'reboot')
-        events.run_until_complete(loop())
+        loop()
 
     except RuntimeError as r:
-        sys.exit(r)
+        sys.exit(r) 
 
     except Exception as e:
-        gateway.reboot(io.close(), events.close(), e)
+        gateway.reboot(io.close(), e)
 
     except KeyboardInterrupt:
         sys.exit("[ERROR] Keyboard Interrupted")
