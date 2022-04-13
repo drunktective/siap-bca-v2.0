@@ -1,7 +1,7 @@
+from urllib.request import urlopen
+from datetime import timedelta
 import cv2, os, requests
 import numpy as np
-import datetime as dt
-import urllib.request
 
 nextMotionSend = None
 startDetectMillis = 0
@@ -36,7 +36,7 @@ def activateMotion():
 
 def checkLocalConnection(host):
     try:
-        urllib.request.urlopen(f'http://{host}')
+        urlopen(f'http://{host}')
         return True
 
     except:
@@ -86,7 +86,7 @@ def imageProcess(frame, currentTime, ms, SERIALNUM):
                         recorded.append(cv2.resize(frame, (640, 400)))
 
                         if len(recorded) == 6:
-                            nextMotionSend = currentTime + dt.timedelta(minutes=30)
+                            nextMotionSend = currentTime + timedelta(minutes=30)
 
                             v1 = np.vstack((recorded[0], recorded[2], recorded[4]))
                             v2 = np.vstack((recorded[1], recorded[3], recorded[5]))

@@ -2,8 +2,8 @@ from src import io_polls as io
 from src import gateway
 from src import camera_setup as cam
 from time import sleep, time
-
-import threading, json
+from threading import Timer, Thread
+import json
 
 timeoutAlarmForceOff = None
 timeoutGateway = None
@@ -35,13 +35,13 @@ def compareData(sensorData):
             if (not motion or heat or cut_heat) and isOperated and timeoutAlarmForceOff is None:
                 print("[VANDAL] Vandal detected on operational time!")
                 io.setAlarm(True)
-                timeoutAlarmForceOff = threading.Timer(360, alarmForceOffTask)
+                timeoutAlarmForceOff = Timer(360, alarmForceOffTask)
                 timeoutAlarmForceOff.start()
 
             elif (heat or cut_heat) and not isOperated and timeoutAlarmForceOff is None:
                 print("[VANDAL] Heat problem!")
                 io.setAlarm(True)
-                timeoutAlarmForceOff = threading.Timer(360, alarmForceOffTask)
+                timeoutAlarmForceOff = Timer(360, alarmForceOffTask)
                 timeoutAlarmForceOff.start()
 
         else:
@@ -89,7 +89,7 @@ def pingingGateway():
 
     else:
         if timeoutGateway is None:
-            timeoutGateway = threading.Timer(20, gatewayRestart)
+            timeoutGateway = Timer(20, gatewayRestart)
             timeoutGateway.start()
             return True
 
@@ -144,9 +144,8 @@ def loop():
     nextPing = millis()
 
     camCheck = io.isCameraOn()
-    if camCheck: threading.Thread(target=camera, args=(), daemon=True).start()
+    if camCheck: Thread(target=camera, args=(), daemon=True).start()
     camErrorCount = 0
-    
 
     sleep(1)
 

@@ -1,10 +1,10 @@
 from src import modbuser as mb
 from src import camera_setup as cam
-import os
+from os import getenv
 
 device = mb.instrument(25, 9600, "/dev/ttyS3")
 alarm = mb.instrument(26, 9600, "/dev/ttyS3")
-camera_device = os.getenv('CAMERA_ADDRESS')
+camera_device = getenv('CAMERA_ADDRESS')
 camera = None
 
 read_motion_loop_index = 0
