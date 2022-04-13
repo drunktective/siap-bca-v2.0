@@ -138,12 +138,15 @@ def loop():
     gateway.client.connect(gateway.config['mqtt_host'], gateway.config['mqtt_port'])
     gateway.client.loop_start()
 
+    io.setAlarmDefaultTime()
+
     nextLoop = millis()
     nextPing = millis()
 
     camCheck = io.isCameraOn()
     if camCheck: threading.Thread(target=camera, args=(), daemon=True).start()
     camErrorCount = 0
+    
 
     sleep(1)
 
