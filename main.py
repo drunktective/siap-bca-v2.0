@@ -1,18 +1,20 @@
 from src import io_polls as io
 from src import gateway
 from src import camera_setup as cam
+from time import sleep, time
 
-import threading, json, time
+import threading, json
 
 timeoutAlarmForceOff = None
 timeoutGateway = None
+frame = None
 temp = {}
 
 def gatewayRestart():
     raise Exception("[ERROR] gateway not connected")
 
 def millis():
-    return round(time.time() * 1000)
+    return round(time() * 1000)
 
 def alarmForceOffTask():
     global timeoutAlarmForceOff
@@ -97,23 +99,25 @@ def camera():
     print("[CAMERA] Checking camera connection...")
     camFirstCheck = 0
 
-    while True:
-        time.sleep(8.5)
+    while not cam.motion_cut:
+        sleep(8.5)
         camFirstCheck += 1
         print(f'[CAMERA] Camera connecting count: {camFirstCheck}')
         if camFirstCheck >= 12:
             print("[CAMERA] Camera connection failed!") 
             cam.camera_cutset(1)
-            
-        if cam.checkLocalConnection(): break
 
-    time.sleep(2)
-    io.camSetup()
-    cam.camera_cutset(0)
+        if cam.checkLocalConnection(io.camera_device): 
+            print("[CAMERA] Camera connected!")
+            sleep(2)
+            io.camSetup()
+            cam.camera_cutset(0)
+            break
+
     nextPing = millis()
-    print("[CAMERA] Camera connected!")
+    while not cam.motion_cut:
+        global frame
 
-    while True:
         ms = millis()
         now = gateway.today()
         _, frame = io.camera.read()
@@ -123,9 +127,6 @@ def camera():
             if gateway.captureEvent:
                 cam.captureUpload(f'manual-{gateway.SERIALNUM}-{now.strftime("%d%m%y_%H:%M:%S")}', frame, gateway.SERIALNUM, now)
                 gateway.captureEvent = False
-
-            isOperated = gateway.checkOperationTime()
-            if isOperated: cam.imageProcess(frame, now, ms, gateway.SERIALNUM)
 
         else:
             cam.camera_cutset(1)
@@ -144,7 +145,7 @@ def loop():
     if camCheck: threading.Thread(target=camera, args=(), daemon=True).start()
     camErrorCount = 0
 
-    time.sleep(1)
+    sleep(1)
 
     while True:
         ms = millis()
@@ -154,7 +155,6 @@ def loop():
 
         if ms >= nextLoop + 250:
             nextLoop += 250
-
             sensorData = io.readSensor()
             if sensorData:
                 compareData(sensorData)
@@ -173,4 +173,8 @@ def loop():
             res = pingingGateway()
             if not res: raise Exception("[ERROR] gateway not fetched")
 
-        time.sleep(0.01)
+        if frame is not None:
+            isOperated = gateway.checkOperationTime()
+            if isOperated: cam.imageProcess(frame, now, ms, gateway.SERIALNUM)
+
+        sleep(0.01)

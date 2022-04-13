@@ -1,14 +1,14 @@
 import subprocess, requests, time, sys 
-from os import getenv, system, path
+from os import getenv, system, path, _exit, EX_OK
 
-def load_env():
+def load_env(env):
     from dotenv import load_dotenv
-    env = '.env'
     try:
         with open(f'/boot/{env}', 'r') as file:
             file.read()
             file.close()
             env = f'/boot/.env'
+            return load_dotenv(env)
 
     except:
         return load_dotenv(env)
@@ -58,16 +58,19 @@ if __name__ == "__main__":
 
         if not envCheck('.env'): raise RuntimeError("[ERROR] Env not found on any local system!")
 
-        load_env()
+        load_env('.env')
         exec(main())
         gateway.makeLog(2000, 'reboot')
         loop()
 
     except RuntimeError as r:
-        sys.exit(r) 
+        print(r)
+        _exit(EX_OK)
 
     except Exception as e:
         gateway.reboot(io.close(), e)
+        _exit(EX_OK)
 
     except KeyboardInterrupt:
-        sys.exit("[ERROR] Keyboard Interrupted")
+        print("[ERROR] Keyboard Interrupted")
+        _exit(EX_OK)

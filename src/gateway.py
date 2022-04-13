@@ -137,7 +137,6 @@ def reboot(pinout, error):
     pinout
     print(error)
     time.sleep(1)
-    sys.exit("[REBOOT] rebooting...")
 
 def makeLog(n, s):
     if s == 'reboot': 
