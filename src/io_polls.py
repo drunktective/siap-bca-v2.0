@@ -3,7 +3,7 @@ from src import camera_setup as cam
 import os
 
 device = mb.instrument(25, 9600, "/dev/ttyS3")
-alarm = mb.instrument(25, 9600, "/dev/ttyS3")
+alarm = mb.instrument(26, 9600, "/dev/ttyS3")
 camera_device = os.getenv('CAMERA_ADDRESS')
 camera = None
 
@@ -107,12 +107,9 @@ def readSensor():
             motion__ = not cam.motion_record() if camera is not None else not readMotion(sensors[2])
             cut_alarm += not mb.write_pool(alarm, 0, alarmState)
             heat += not sensors[4]
-            cut_heat += sensors[3]
+            cut_heat += not sensors[3]
             outage += sensors[7]
             cut_motion = cam.motion_cut
             read_sens_loop_index += 1
 
-        # print(f'{sensors[2]}, {int(motion__)}, {cut_alarm}, {heat}, {cut_heat}, {outage}')
-        # print(cut_motion)
-        # print(sensors)
         return False
