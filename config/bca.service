@@ -1,0 +1,15 @@
+[Unit]
+Description=running siap-bca
+Wants=network-online.target
+After=network-online.target
+ 
+[Service]
+ExecStart=python3 /home/macuser/siap-bca-v2.0/getter.py
+WorkingDirectory=/home/macuser/siap-bca-v2.0
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=macuser
+ 
+[Install]
+WantedBy=multi-user.target
