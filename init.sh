@@ -26,7 +26,7 @@ cd $script
 e4=$?
 
 echo "[CONFIG] setting watchdog"
-sudo apt-get install watchdog
+yes yes | sudo apt-get install watchdog
 sudo cp config/watchdog.conf /etc/watchdog.conf
 e5=$?
 
@@ -35,7 +35,7 @@ echo '/dev/sdb1 /media/bcafile vfat defaults 0 0' | sudo tee -a /etc/fstab
 e6=$?
 
 echo "[CONFIG] getting siap-bca dependencies"
-sudo apt-get install python3-pip
+yes yes | sudo apt-get install python3-pip
 pip3 install -r "config/libs.txt"
 e7=$?
 
