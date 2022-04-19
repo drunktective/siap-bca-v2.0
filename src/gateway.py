@@ -96,8 +96,8 @@ def on_connect(client, userdata, flags, rc):
 
             if topic == 'logs' and payload != '0':
                 log = {'log': makeLog(payload, 'load').stdout.decode('utf-8')}
-                url = 'http://192.168.50.143:3000'
-                requests.post(url, data=log)
+                # url = 'http://192.168.50.143:3000'
+                # requests.post(url, data=log)
                 print(f'[LOGS] sent {payload} last log')
                 client.publish(f'siap/{SERIALNUM}/logs', '0')
 
@@ -140,11 +140,12 @@ def reboot(pinout, error):
 
 def makeLog(n, s):
     if s == 'reboot': 
-        command = f'journalctl -n {n} > .machine-logs && sudo cp .machine-logs /boot/.machine-logs'
+        command = f'journalctl -n {n} > .machine-logs && cp .machine-logs ../Desktop/logs.txt'
+        # && sudo cp .machine-logs /boot/.machine-logs'
         res = subprocess.run(command, shell=True)
     
     if s == 'load': 
-        command = f'journalctl -n {n}'
+        command = f'journalctl -n {n} > ../Desktop/logs.txt'
         res = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
 
     return res

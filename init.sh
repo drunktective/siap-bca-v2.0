@@ -15,11 +15,11 @@ e2=$?
 
 echo "[CONFIG] setting git"
 yes yes | sudo apt-get install git
-git config --global user.name "drunktective"
-git config --global user.email "drunktective@ruru.be"
+git config --global user.name "${git}"
+git config --global user.email "${git}@ruru.be"
 e3=$?
 
-echo "[CONFIG] getting $script"
+echo "[CONFIG] getting ${script}"
 cd /home/$user
 git clone https://github.com/$git/$script
 cd $script
@@ -46,5 +46,5 @@ sudo systemctl enable bca.service
 e8=$?
 
 errorinfo=($e1,$e2,$e3,$e4,$e5,$e6,$e7,$e8)
-echo "[CONFIG] setting config done. recheck error code >> $errorinfo"
+echo "[CONFIG] setting config done. recheck error code >> ${errorinfo}"
 echo "[CONFIG] reboot required!"
