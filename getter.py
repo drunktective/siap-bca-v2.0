@@ -43,22 +43,21 @@ if __name__ == "__main__":
     from dotenv import load_dotenv, find_dotenv
 
     try:
-        # cloud_version = getCloudVersion(getenv('CLOUD_HOST'), {'x-siap-token': 'xxx'})
-        # print(f'[VERSION] cloud version: {cloud_version}')
-
-        # local_version = getLocalVersion('.ver', 'r')
-        # print(f'[VERSION] local version: {local_version}')
-
-        # if cloud_version != local_version:
-        #     subprocess.run("git pull", shell=True)
-        #     time.sleep(1)
-        #     up = getLocalVersion('.ver', 'w')
-
+        load_env('.env')
         if envCheck('/media/bcafile/env.txt'): system('cp /media/bcafile/env.txt .env')
-
         if not envCheck('.env'): raise RuntimeError("[ERROR] Env not found on any local system!")
 
-        load_env('.env')
+        cloud_version = getCloudVersion(getenv('CLOUD_HOST'), {'x-siap-token': 'rpi_mqtt_0d4d0dd01d8b8bffe77304d419f1ed594e5c9416d02c9757c8b03e02d37600e4:_'})
+        print(f'[VERSION] cloud version: {cloud_version}')
+
+        local_version = getLocalVersion('.ver', 'r')
+        print(f'[VERSION] local version: {local_version}')
+
+        if cloud_version != local_version:
+            subprocess.run("git pull", shell=True)
+            time.sleep(1)
+            up = getLocalVersion('.ver', 'w')
+            
         exec(main())
         gateway.makeLog(2000, 'reboot')
         loop()

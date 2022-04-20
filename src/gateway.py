@@ -108,11 +108,15 @@ def on_connect(client, userdata, flags, rc):
                 triggerReboot = True
 
             if topic == 'update' and payload == 'yes':
-                res = subprocess.run("git pull", shell=True, stdout=subprocess.PIPE).stdout.decode('utf-8')
-                print(res)
-                client.publish(f'siap/{SERIALNUM}/update', '0')
-                time.sleep(1)
-                triggerReboot = True
+                error_update = subprocess.run(["git", "pull"], check=True, stderr=subprocess.PIPE).stderr.decode("UTF-8")
+                if error_update:
+                    print(f'[UPDATE] error: {error_update}')
+                    client.publish(f'siap/{SERIALNUM}/update', 'update_error')
+                
+                else:
+                    client.publish(f'siap/{SERIALNUM}/update', '0')
+                    time.sleep(1)
+                    triggerReboot = True
 
             if topic == 'capture' and not captureEvent:
                 captureEvent = True
