@@ -79,14 +79,14 @@ def on_connect(client, userdata, flags, rc):
                     print('[ALARM] Alarm reset')
                     setAlarmOff(False)
 
-            if topic == 'time':
+            elif topic == 'time':
                 setOperationalTime(payload)
                 checkOperationTime()
 
                 print("[GATEWAY] synced to SIAP!")
                 isConnected = True
 
-            if topic == 'version' and payload == 'check':
+            elif topic == 'version' and payload == 'check':
                 with open('.ver', 'r') as file:
                     version = file.read().rstrip('\n')
                     file.close()
@@ -94,20 +94,20 @@ def on_connect(client, userdata, flags, rc):
                 print(f'[VERSION] machine version: {version}')
                 client.publish(f'siap/{SERIALNUM}/version', version)
 
-            if topic == 'logs' and payload != '0':
+            elif topic == 'logs' and payload != '0':
                 log = {'log': makeLog(payload, 'load').stdout.decode('utf-8')}
                 # url = 'http://192.168.50.143:3000'
                 # requests.post(url, data=log)
                 print(f'[LOGS] sent {payload} last log')
                 client.publish(f'siap/{SERIALNUM}/logs', '0')
 
-            if topic == 'reboot' and payload == '1':
+            elif topic == 'reboot' and payload == '1':
                 time.sleep(0.2)
                 client.publish(f'siap/{SERIALNUM}/reboot', '0')
                 time.sleep(1)
                 triggerReboot = True
 
-            if topic == 'update' and payload == 'yes':
+            elif topic == 'update':
                 error_update = subprocess.run(["git", "pull"], check=True, stderr=subprocess.PIPE).stderr.decode("UTF-8")
                 if error_update:
                     print(f'[UPDATE] error: {error_update}')
@@ -118,10 +118,10 @@ def on_connect(client, userdata, flags, rc):
                     time.sleep(1)
                     triggerReboot = True
 
-            if topic == 'capture' and not captureEvent:
+            elif topic == 'capture' and not captureEvent:
                 captureEvent = True
 
-            if topic == 'reset':
+            elif topic == 'reset':
                 activateMotion()
 
         client.subscribe(f'siap/{SERIALNUM}/#')
