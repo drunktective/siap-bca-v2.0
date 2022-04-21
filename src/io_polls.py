@@ -28,8 +28,7 @@ def setAlarmDefaultTime():
     mb.write_pool(alarm, 1, 300)
 
 def isCameraOn():
-    if camera_device != "0": return True
-    return False
+    return camera_device != "0"
 
 def camSetup():
     global camera
@@ -105,8 +104,7 @@ def readSensor():
         return sensorData
 
     else:
-        sensors = mb.read_pool(device, 8)
-        if sensors:
+        if sensors := mb.read_pool(device, 8):
             motion__ = not cam.motion_record() if camera is not None else not readMotion(sensors[2])
             cut_alarm += not mb.write_pool(alarm, 0, alarmState)
             heat += not sensors[4]

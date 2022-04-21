@@ -143,9 +143,9 @@ def loop():
     nextLoop = millis()
     nextPing = millis()
 
-    camCheck = io.isCameraOn()
-    if camCheck: Thread(target=camera, args=(), daemon=True).start()
-    camErrorCount = 0
+    if camCheck := io.isCameraOn():
+        Thread(target=camera, args=(), daemon=True).start()
+        camErrorCount = 0
 
     sleep(1)
 

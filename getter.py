@@ -7,7 +7,7 @@ def load_env(env):
         with open(f'/boot/{env}', 'r') as file:
             file.read()
             file.close()
-            env = f'/boot/.env'
+            env = '/boot/.env'
             return load_dotenv(env)
 
     except:

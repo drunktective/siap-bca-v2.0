@@ -39,12 +39,16 @@ yes yes | sudo apt-get install python3-pip
 pip3 install -r "config/libs.txt"
 e7=$?
 
+echo "[CONFIG] adding .ver"
+echo ‘2.0’ >> /home/macuser/siap-bca-v2.0/.ver
+e8=$?
+
 echo "[CONFIG] config bca.service"
 sudo cp config/bca.service /etc/systemd/system/bca.service
 sudo systemctl daemon-reload
 sudo systemctl enable bca.service
-e8=$?
+e9=$?
 
-errorinfo=($e1,$e2,$e3,$e4,$e5,$e6,$e7,$e8)
+errorinfo=($e1,$e2,$e3,$e4,$e5,$e6,$e7,$e8,$e9)
 echo "[CONFIG] setting config done. recheck error code >> ${errorinfo}"
 echo "[CONFIG] reboot required!"
