@@ -24,8 +24,8 @@ read_sens_loop_index = 0
 alarmState = False
 sensorData = False
 
-def setAlarmDefaultTime():
-    mb.write_pool(alarm, 1, 0)
+def setAlarmDefaultTime(time):
+    mb.write_pool(alarm, 1, time)
 
 def isCameraOn():
     return camera_device != "0"

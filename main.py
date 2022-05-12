@@ -138,7 +138,7 @@ def loop():
     gateway.client.connect(gateway.config['mqtt_host'], gateway.config['mqtt_port'])
     gateway.client.loop_start()
 
-    io.setAlarmDefaultTime()
+    io.setAlarmDefaultTime(0)
 
     nextLoop = millis()
     nextPing = millis()
